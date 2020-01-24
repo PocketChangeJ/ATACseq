@@ -68,29 +68,24 @@ if args.prefix:
                         qc['TssEnrichment'] = row[header['EnrichmentOverBed']]
 
     # Peak calling statistics
-    qc['UnfilteredPeaks'] = str(linecount(args.prefix + ".unfiltered.peaks.gz"))
-    qc['FilteredPeaks'] = str(linecount(args.prefix + ".peaks"))
-    qc['FractionPeaksRetained'] = str(float(qc['FilteredPeaks'])/float(qc['UnfilteredPeaks']))
+    filename = args.prefix + ".unfiltered.peaks.gz"
+    if os.path.isfile(filename):
+        qc['UnfilteredPeaks'] = str(linecount(filename))
+        filename = args.prefix + ".peaks"
+        if os.path.isfile(filename):
+            qc['FilteredPeaks'] = str(linecount(filename))
+            qc['FractionPeaksRetained'] = str(float(qc['FilteredPeaks'])/float(qc['UnfilteredPeaks']))
     filename = args.prefix + ".peaks.log"
     if os.path.isfile(filename):
         with open(filename, 'r') as f:
             f_reader = csv.DictReader(f, delimiter="\t")
             for row in f_reader:
-                qc['FRiP'] = row['frip']
+                frip = row['frip'].split(',')
+                if len(frip) == 2:
+                    qc['FRiP'] = str(min(float(frip[0]), float(frip[1])))
+                else:
+                    qc['FRiP'] = row['frip']
                 qc['PeakSaturation'] = str(min(float(row['recallRep1']), float(row['recallRep2'])))
-
-    # chrM fraction (ToDo: remove after next alfred upgrade)
-    filename = args.prefix + ".idxstats"
-    if os.path.isfile(filename):
-        with open(filename, 'r') as f:
-            f_reader = csv.reader(f, delimiter="\t")
-            total = 0
-            chrM = 0
-            for row in f_reader:
-                total += int(row[2])
-                if (row[0] == "M") or (row[0] == "chrM") or (row[0] == "MT") or (row[0] == "chrMT"):
-                    chrM = int(row[2])
-            qc['FractionChrM'] = str(float(chrM)/float(total))
 
 # Output summary QC information
 cols = sorted(qc.keys())

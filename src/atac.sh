@@ -6,8 +6,9 @@ then
     echo "ATAC-Seq analysis pipeline."
     echo "This program comes with ABSOLUTELY NO WARRANTY."
     echo ""
-    echo "Version: 0.1.1"
+    echo "Version: 0.1.5"
     echo "Contact: Tobias Rausch (rausch@embl.de)"
+    echo "Please cite: https://doi.org/10.1093/bioinformatics/bty1007"
     echo "**********************************************************************"
     echo ""
     echo "Usage: $0 <hg19|mm10> <read1.fq.gz> <read2.fq.gz> <genome.fa> <output prefix>"
@@ -37,11 +38,18 @@ ${BASEDIR}/peaks.sh ${OUTP}.pseudorep1.bam ${OUTP}.pseudorep2.bam ${HG} ${OUTP}
 # Delete pseudo-replicates
 rm ${OUTP}.pseudorep1.bam ${OUTP}.pseudorep1.bam.bai ${OUTP}.pseudorep2.bam ${OUTP}.pseudorep2.bam.bai
 
+# Footprints
+${BASEDIR}/footprints.sh ${ATYPE} ${HG} ${OUTP}.final.bam ${OUTP}
+
+# Aggregate key QC metrics
+${BASEDIR}/qc_globber.sh ${OUTP}
+
+# Variant calling
+${BASEDIR}/variants.sh ${HG} ${OUTP} ${OUTP}.final.bam
+
 # Annotate peaks
 ${BASEDIR}/homer.sh ${OUTP}.peaks ${OUTP}.final.bam ${HG} ${OUTP}
 
 # Motif discovery
 ${BASEDIR}/motif.sh ${ATYPE} ${OUTP}.peaks ${OUTP}
 
-# Aggregate key QC metrics
-${BASEDIR}/qc_globber.sh ${OUTP}
